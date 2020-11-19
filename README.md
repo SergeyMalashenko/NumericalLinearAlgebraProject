@@ -1,6 +1,6 @@
 # NumericalLinearAlgebraProject
 
-| Subproject                  | Principal staff | Commments |
+| Subproject                  | Principal staff | Comments |
 |:----------------------------|:----------------|:----------|
 | training\_mnist\_model.py   | Illarion Belousov, Igor Kurbet                       |           |
 | processing\_mnist\_data.py  | Sergey Malashenko, Vsevolod Mashinson, Ilya Sviridov |           |
