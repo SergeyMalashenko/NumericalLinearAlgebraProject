@@ -238,6 +238,8 @@ if __name__ == '__main__':
     N_EPOCH = 16
     
     out_file = 'test'+str(DIM)+'.npy'
+    out_file_norm = 'test'+str(DIM)+'_norm_'+'.npy'
+    out_file_y = 'test_y_'+'.npy'
     ##
     m = Net_arc(n_out=DIM,batchnorm=True)
     ## load
@@ -290,6 +292,9 @@ if __name__ == '__main__':
         with open(out_file, 'wb') as f:
             np.save(f, arcface_features)
             
-        with open(out_file+'_norm', 'wb') as f:
+        with open(out_file_norm, 'wb') as f:
             np.save(f, arcface_features_n)
+            
+        with open(out_file_y, 'wb') as f:
+            np.save(f, y_test)
 
