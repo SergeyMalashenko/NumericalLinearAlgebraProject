@@ -6,6 +6,10 @@ import numpy  as np
 import scipy  as sp
 import pandas as pd
 
+from numpy.linalg import norm, svd
+
+from spherecluster          import sample_vMF
+
 def parseArguments():
     description = 'Process MNIST data'
     parser = argparse.ArgumentParser(description=description)
@@ -16,7 +20,42 @@ def parseArguments():
 
     return args.input, args.output, args.verbose
 
-def applySphericalPCA( source_data ):
+def generateUniformUnitVectors(num_clusters, num_dimensions):
+    mu_s = np.random.randn(num_clusters, num_dimensions)
+    mu_s /= np.linalg.norm(mu_s, axis=0)
+ 
+    kappa_value = 10
+    kappa_s = [kappa_value] * num_clusters
+    
+    return mu_s, kappa_s
+
+def randomProjectUnitVectors( mu_s, kappa_s, num_dimensions):
+    return mu_s, kappa_s
+
+def generateDataset( mu_s, kappa_s, num_samples):
+    num_clusters, dim = mu_s.shape
+
+    X_s_numpy = np.zeros( (num_clusters, num_samples, dim) )
+    Y_s_numpy = np.zeros( (num_clusters, num_samples) )
+    for index in range(num_clusters):
+        X_s_numpy[index] = sample_vMF( mu_s[index], kappa_s[index], num_samples)
+        Y_s_numpy[index] = index
+    
+    return X_s_numpy, Y_s_numpy
+
+def applySphericalPCA( X, r, lam ,mu, K ):
+    m, n = X.shape
+    U = np.zeros(m,r)
+    V = np.array(r,n)
+    
+    for _ in range(K):
+        M = 2*(X - U@V)@V.T + mu*U
+        Y,S,Z = sdv(M)
+        U = Y@Z.T
+        for j in range(n):
+            q = 2*U.T @ X[:,j] + (lam - 2)*V[:,j]
+            V[:,j] = q / norm(q)
+    return U, V
     '''
     target_data = None
     
@@ -47,15 +86,18 @@ def applySphericalPCA( source_data ):
         %obj(i)=norm(x-U*V,'fro');
     end
     '''
-    
-
-
     return target_data, tolerance
 
 def main():
-    input_filename, output_filename, verbose = parseArguments()
-    
-    input_df = pd.read_csv( input_filename )
+    #input_filename, output_filename, verbose = parseArguments()
+    #input_df = pd.read_csv( input_filename )
 
+    num_clusters   = 10
+    num_samples    = 100
+    num_dimensions = 100
+    
+    mu_s, kappa_s = generateUniformUnitVectors(num_clusters, num_dimensions)
+    mu_s, kappa_s = randomProjectUnitVectors(mu_s, kappa_s, num_dimensions)
+    X_s, Y_s = generateDataset(mu_s, kappa_s, num_samples)
     
 

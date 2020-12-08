@@ -9,6 +9,7 @@ from scipy.spatial.distance import cdist
 from sklearn                import metrics
 
 import argparse
+
 def generateUniformUnitVectors(num_clusters, num_dimensions):
     mu_s = np.random.randn(num_clusters, num_dimensions)
     mu_s /= np.linalg.norm(mu_s, axis=0)
