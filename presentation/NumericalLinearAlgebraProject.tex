@@ -7,7 +7,7 @@
 
 \subtitle{Applying spherical PCA algorithm for dimensionality reduction set of unit vectors}
 
-\author[] { Белоусов Илларион, Карчмит Илья, Курбет Игорь, Малашенко Сергей, Машинсон Всеволод, Свиридов Илья, Панов Алексей }
+\author[] { Белоусов Илларион, Курбет Игорь, Малашенко Сергей, Машинсон Всеволод, Свиридов Илья }
 
 \date[]{OZON Masters, December 2020}
 
@@ -45,6 +45,27 @@
 
 \begin{frame}
 \frametitle{Метод главных компонент на сфере}
+\begin{centering}
+\includegraphics[scale=0.17]{sphericalPCA.png}
+\end{centering}
+
+$$\underset{\mathrm{U} \in \mathbb{R}^{m x r}, \mathrm{V} \in \mathbb{R}^{r x n} }{minimize} \lVert \mathrm{X - UV} \rVert^2_F, \mathrm{U} \in \mathbb{U}, \mathrm{V} \in \mathbb{V}$$
+$$\mathbb{U} = \{\mathrm{U : U^{\top}U=I }\}, \mathbb{V} = \{ \lVert \mathrm{v_j} \rVert = 1, \forall j \}$$
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{Метод главных компонент на сфере}
+\begin{align*} 
+\mathrm{U(k+1)} &= \underset{\mathrm{U} \in \mathbb{U} }{argmin}{\lVert \mathrm{X - UV(k)} \rVert^2_F} \\ 
+\mathrm{v_j(k+1)} &= \underset{\lVert \mathrm{v_j} \rVert = 1}{argmin}{\lVert \mathrm{x_j - U(k+1)v_j(k)} \rVert^2_2, \forall j}
+\end{align*}
+$$\Downarrow$$
+\begin{align*} 
+\mathrm{h(U,V)} &= \lVert \mathrm{X - UV} \rVert^2_F = \sum_{j=1}^n \lVert \mathrm{x_j - Uv_j} \rVert^2 \\
+\mathrm{U(k+1)} &= \underset{\mathrm{U} \in \mathbb{U} }{argmin}{ \langle \mathrm{U-U(k), \nabla_Uh(U(k),V(k))} \rangle + \frac{\mu}{2} \lVert \mathrm{U - U(k)} \rVert^2_F } \\ 
+\mathrm{v_j(k+1)} &= \underset{\lVert \mathrm{v_j} \rVert = 1}{argmin}{\lVert \mathrm{x_j - U(k+1)v_j(k)} \rVert^2_2, \forall j}
+\end{align*}
+
 
 \end{frame}
 
