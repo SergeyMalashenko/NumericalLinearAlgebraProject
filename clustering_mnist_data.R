@@ -1,5 +1,5 @@
 install.packages("HSAUR3", dependencies = TRUE)
-install.packages("movMF" , dependencies = TRUE)
+install.packages("movMF" )
 
 data("household", package = "HSAUR3")
 x <- as.matrix(household[, c(1:2, 4)])
