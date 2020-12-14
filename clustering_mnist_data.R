@@ -1,11 +1,16 @@
-install.packages("HSAUR3", dependencies = TRUE)
-install.packages("movMF" )
+library(movMF)
+library(reticulate)
 
-data("household", package = "HSAUR3")
-x <- as.matrix(household[, c(1:2, 4)])
-gender <- household$gender
-theta <- rbind(female = movMF(x[gender == "female", ], k = 1)$theta,male = movMF(x[gender == "male", ], k = 1)$theta)
-set.seed(2008)
+np <- import("numpy")
+x  <- np$load( "data/X_s_16.npy" )
+y1 <- np$load( "data/Y_s_16.npy" )
+## Fit a von Mises-Fisher mixture with the "right" number of components,
+## using 10 EM runs.
+y2 <- movMF(x, 10, nruns = 100, kappa = "uniroot")
+table(True = y1, Fitted = predict(y2))
+y2
 
-vMFs <- lapply(1:5, function(K) movMF(x, k = K, control= list(nruns = 20)))
-sapply(vMFs, BIC)
+## Inspect the fitted parameters:y2
+## Compare the fitted classes to the true ones:
+#table(True = attr(x, "z"), Fitted = predict(y2))
+

@@ -36,35 +36,30 @@ def generateDataset( mu_s, kappa_s, num_samples):
 def parseArguments():
     description = 'Clustering MNIST vector'
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument( '--input'  , default='input.npy' ,type=str )
+    parser.add_argument( '--x_s'    , type=str )
+    parser.add_argument( '--y_s'    , type=str )
+    parser.add_argument( '--mu_s'   , type=str )
     parser.add_argument( '--mode'   , default='soft' )
     parser.add_argument( '--verbose', action='store_true' )
     args = parser.parse_args()
 
-    return args.input, args.mode, args.verbose
+    return args.x_s, args.y_s, args.mu_s, args.mode, args.verbose
 
-inputFileName, processMode, verboseMode = parseArguments()
+input_X_s, input_Y_s, input_mu_s, processMode, verboseMode = parseArguments()
 
-X_s = np.load( 'test512_x_.npy' )
-Y_s = np.load( 'test512_y_.npy' )
+X_s  = np.load( input_X_s  )
+Y_s  = np.load( input_Y_s  )
+mu_s = np.load( input_mu_s )
 
-print(X_s.shape)
-print(Y_s.shape)
-'''
-num_clusters   = 10
-num_samples    = 100
-num_dimensions = 100
+num_clusters = np.unique(Y_s).size
 
-mu_s, kappa_s = generateUniformUnitVectors(num_clusters, num_dimensions)
-X_s, Y_s = generateDataset(mu_s, kappa_s, num_samples)
-X_s = X_s.reshape(num_clusters*num_samples, num_dimensions)
-Y_s = Y_s.reshape(num_clusters*num_samples)
-'''
+print(num_clusters)
+
 if processMode == 'soft':
-    vmf_model = VonMisesFisherMixture(n_clusters = 10, posterior_type='soft')
+    vmf_model = VonMisesFisherMixture(n_clusters = num_clusters, posterior_type='soft')
     vmf_model.fit(X_s)
 elif processMode == 'hard':
-    vmf_model = VonMisesFisherMixture(n_clusters = 10, posterior_type='hard')
+    vmf_model = VonMisesFisherMixture(n_clusters = num_clusters, posterior_type='hard')
     vmf_model.fit(X_s)
 
 estimated_kappa_s = vmf_model.concentrations_

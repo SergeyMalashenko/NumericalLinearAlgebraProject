@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import matplotlib
 import argparse
+import random
 import os
 
 import numpy  as np
@@ -12,8 +14,11 @@ from mpl_toolkits.mplot3d import Axes3D
 from numpy.linalg  import norm, svd
 from spherecluster import sample_vMF
 
-import scipy.io
+#color_s = ['red', 'black', 'blue', 'brown', 'green']
+color_s = list(matplotlib.colors.cnames.keys())
+random.shuffle(color_s)
 
+#import scipy.io
 #X_s = scipy.io.loadmat('temporary.mat')['data']
 #X_s = X_s / norm(X_s,axis=0, keepdims = True)
 #print(X_s)
@@ -30,14 +35,19 @@ def parseArguments():
 
 def generateUniformUnitVectors(num_clusters, num_dimensions):
     random_shift = 2*np.pi*np.random.random(1)
-    theta = np.linspace(0 + random_shift[0], 2*np.pi + random_shift[0], num_clusters, endpoint=True)
-    mu_s = np.concatenate([np.cos(theta)[:,np.newaxis], np.sin(theta)[:,np.newaxis]], axis=1) 
+    lft_theta = 0
+    rht_theta = 2*np.pi*(1 - 1./(num_clusters-1)) 
+    theta_s = np.linspace(lft_theta + random_shift[0], rht_theta + random_shift[0], num_clusters)
+    mu_s = np.concatenate([np.cos(theta_s)[:,np.newaxis], np.sin(theta_s)[:,np.newaxis]], axis=1) 
+    
+    theta_s = np.linspace(0, 2*np.pi, 100)
+    xy_circle_s = np.concatenate([np.cos(theta_s)[:,np.newaxis], np.sin(theta_s)[:,np.newaxis]], axis=1) 
     
     kappa_value = 1000
     kappa_s = [kappa_value] * num_clusters
-    return mu_s, kappa_s
+    return mu_s, kappa_s, xy_circle_s
 
-def randomRotateUnitVectors( mu_s, X_s ):
+def getRandomTransform():
     theta = 2*np.pi*np.random.random(3)
     rotate_z = np.array([
         [np.cos(theta[2]), -np.sin(theta[2]), 0],
@@ -54,10 +64,7 @@ def randomRotateUnitVectors( mu_s, X_s ):
         [0, np.cos(theta[0]),-np.sin(theta[0])],
         [0, np.sin(theta[0]), np.cos(theta[0])]
     ])
-    
-    updated_X_s  = X_s  @ rotate_z @ rotate_y @ rotate_x  
-    updated_mu_s = mu_s @ rotate_z @ rotate_y @ rotate_x  
-    return updated_mu_s, updated_X_s
+    return rotate_z @ rotate_y @ rotate_x 
 
 def generateDataset( mu_s, kappa_s, num_samples):
     num_clusters, dim = mu_s.shape
@@ -96,34 +103,40 @@ def applySphericalPCA( X, r, lam=5, mu=5, K=200):
 def applyBasePCA():
     return
 
-color_s = ['red', 'black', 'blue', 'brown', 'green']
-
-num_clusters   = 5
+num_clusters   = 8
 num_samples    = 100
-num_dimensions = 2
+num_dimensions = 3
 
-mu_s, kappa_s = generateUniformUnitVectors(num_clusters, num_dimensions)
+u = np.linspace(0, 2*np.pi, 100)
+v = np.linspace(0, 1*np.pi, 100)
+p_sphere_s = np.concatenate([
+    np.outer(np.cos(u), np.sin(v))[:,np.newaxis], 
+    np.outer(np.sin(u), np.sin(v))[:,np.newaxis], 
+    np.outer(np.ones(np.size(u)),np.cos(v))[:,np.newaxis]
+], axis=1) 
+
+
+mu_s, kappa_s, p_circle_s = generateUniformUnitVectors(num_clusters, num_dimensions)
+#X_s        = np.concatenate([X_s       , np.zeros((X_s .shape[0],1))], axis=1)
+mu_s       = np.concatenate([mu_s      , np.zeros((mu_s.shape[0],1))], axis=1)
+p_circle_s = np.concatenate([p_circle_s, np.zeros((p_circle_s.shape[0],1))], axis=1)
+
 X_s, Y_s = generateDataset(mu_s, kappa_s, num_samples)
 
-X_s  = np.concatenate([X_s,  np.zeros((X_s .shape[0],1))], axis=1)
-mu_s = np.concatenate([mu_s, np.zeros((mu_s.shape[0],1))], axis=1)
-
-mu_s, X_s = randomRotateUnitVectors(mu_s, X_s)
+randomTransform = getRandomTransform()
+X_s        = X_s  @ randomTransform
+mu_s       = mu_s @ randomTransform
+p_circle_s = p_circle_s @ randomTransform
 
 fig1 = plt.figure( figsize=plt.figaspect(0.5) )
 ax1 = fig1.add_subplot(1, 2, 1, projection='3d')
-
-u = np.linspace(0, 2 * np.pi, 100)
-v = np.linspace(0, np.pi, 100)
-x = np.outer(np.cos(u), np.sin(v))
-y = np.outer(np.sin(u), np.sin(v))
-z = np.outer(np.ones(np.size(u)), np.cos(v))
-ax1.plot_surface(x, y, z, alpha=0.1)
+ax1.plot_surface(p_sphere_s[:,0], p_sphere_s[:,1], p_sphere_s[:,2], alpha=0.2)
+ax1.plot(p_circle_s[:,0], p_circle_s[:,1], p_circle_s[:,2], alpha=0.2, color='black')
 
 zeros = np.zeros(mu_s.shape[0])
 for c in range(len(np.unique(Y_s))):
     ax1.plot(X_s[Y_s==c, 0], X_s[Y_s==c, 1], X_s[Y_s==c, 2], '.', color=color_s[c])
-ax1.quiver3D(zeros, zeros, zeros, mu_s[:,0], mu_s[:,1], mu_s[:,2], color='black', arrow_length_ratio=0.001)
+ax1.quiver3D(zeros, zeros, zeros, mu_s[:,0], mu_s[:,1], mu_s[:,2], color='black', arrow_length_ratio=0.001, alpha=0.2)
 
 U_s, V_s, residual_s = applySphericalPCA( X_s.T, 2, 10, 10, 1000 )
 V_s = V_s.T
